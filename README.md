@@ -1,6 +1,6 @@
-# Reap Holding Online Meet - Real V4.1 Auto Open Share Link
+# Reap Holding Online Meet - Real V4.2 Eissa Digital Theme
 
-Backend + Database + Login + Public Registration + Admin User Management + Share Meeting Links + Branded Jitsi meeting portal.
+Backend + Database + Login + Public Registration + Admin User Management + Share Meeting Links + Eissa Digital Theme + Branded Jitsi meeting portal.
 
 ## Features
 
@@ -51,3 +51,13 @@ http://127.0.0.1:8005
 python server.py
 
 Railway will provide PORT automatically.
+
+## Branding
+
+This version applies Eissa Digital Theme:
+
+- Dark Navy premium interface
+- Cyan / Teal highlights
+- Digital Solution by Ahmed Eissa attribution
+- Branded footer
+- Updated icon style

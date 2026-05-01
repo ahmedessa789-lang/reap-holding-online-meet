@@ -1,5 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="g" x1="20" y1="20" x2="172" y2="172" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="0.52" stop-color="#14b8a6"/>
+      <stop offset="1" stop-color="#34d399"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
   <rect width="192" height="192" rx="42" fill="#020617"/>
-  <circle cx="96" cy="96" r="58" fill="#22d3ee" opacity="0.18"/>
-  <text x="96" y="110" text-anchor="middle" font-size="48" font-weight="900" font-family="Arial, sans-serif" fill="#67e8f9">RH</text>
+  <circle cx="96" cy="96" r="64" fill="url(#g)" opacity="0.18"/>
+  <circle cx="96" cy="96" r="49" fill="none" stroke="url(#g)" stroke-width="5" opacity="0.85" filter="url(#glow)"/>
+  <text x="96" y="106" text-anchor="middle" font-size="46" font-weight="900" font-family="Arial, sans-serif" fill="#e0faff">RH</text>
+  <text x="96" y="132" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#67e8f9">EISSA</text>
 </svg>
