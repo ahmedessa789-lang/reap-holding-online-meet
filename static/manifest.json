@@ -1,0 +1,16 @@
+{
+  "name": "Reap Holding Online Meet",
+  "short_name": "RH Meet",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "description": "Branded online meeting portal for Reap Holding",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}

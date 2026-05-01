@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reap Holding Online Meet</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="stylesheet" href="/style.css" />
+  <meta name="theme-color" content="#020617" />
+</head>
+<body>
+  <div id="loginPage" class="login-page">
+    <div class="login-card">
+      <div class="brand big">
+        <div class="brand-logo">RH</div>
+        <div>
+          <h1>Reap Holding</h1>
+          <p>Online Meet</p>
+        </div>
+      </div>
+
+      <h2>Corporate Meeting Portal</h2>
+      <p class="muted">Login to start, schedule, and manage branded online meetings.</p>
+
+      <div class="demo-box">
+        <strong>Demo Accounts</strong>
+        <span>Admin: admin@reapholding.com / admin123</span>
+        <span>User: user@reapholding.com / user123</span>
+      </div>
+
+      <label>Email</label>
+      <input id="emailInput" value="admin@reapholding.com" />
+
+      <label>Password</label>
+      <input id="passwordInput" type="password" value="admin123" />
+
+      <p id="loginError" class="error"></p>
+      <button id="loginBtn" class="primary full">Login</button>
+    </div>
+  </div>
+
+  <div id="appPage" class="app hidden">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">RH</div>
+        <div>
+          <h1>Reap Holding</h1>
+          <p>Online Meet</p>
+        </div>
+      </div>
+
+      <nav>
+        <button class="nav-btn active" data-view="home">🏠 Home</button>
+        <button class="nav-btn" data-view="schedule">📅 Schedule Meeting</button>
+        <button class="nav-btn" data-view="join">🔗 Join Meeting</button>
+        <button class="nav-btn" data-view="meetings">📋 My Meetings</button>
+        <button class="nav-btn admin-only" data-view="admin">📊 Admin Dashboard</button>
+      </nav>
+
+      <div class="sidebar-note">
+        <strong>Real V1</strong>
+        <span>Backend + SQLite Database + Login</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Corporate Branded Meeting Portal</p>
+          <h2 id="pageTitle">Home</h2>
+        </div>
+        <div class="user-area">
+          <div class="user-pill">
+            <span class="dot"></span>
+            <span id="userName">User</span>
+            <small id="userRole">role</small>
+          </div>
+          <button id="logoutBtn" class="secondary">Logout</button>
+        </div>
+      </header>
+
+      <section id="home" class="view active">
+        <div class="hero">
+          <div>
+            <p class="eyebrow">Reap Holding Online Meet</p>
+            <h3>Secure branded online meetings for your company</h3>
+            <p>
+              Start instant meetings, schedule sessions, invite participants,
+              and manage meeting records from one corporate dashboard.
+            </p>
+            <div class="hero-actions">
+              <button class="primary" id="instantMeetingBtn">Start Instant Meeting</button>
+              <button class="secondary" data-open="schedule">Schedule Meeting</button>
+            </div>
+          </div>
+          <div class="hero-card">
+            <span>🎥</span>
+            <strong>Camera • Mic • Chat • Screen Share</strong>
+            <p>All inside a branded Reap Holding portal.</p>
+          </div>
+        </div>
+
+        <div class="cards-grid">
+          <div class="card stat-card"><span>Total Meetings</span><strong id="homeTotalMeetings">0</strong></div>
+          <div class="card stat-card"><span>Scheduled</span><strong id="homeScheduledMeetings">0</strong></div>
+          <div class="card stat-card"><span>Completed</span><strong id="homeCompletedMeetings">0</strong></div>
+        </div>
+
+        <div class="card">
+          <h3>Real V1 includes</h3>
+          <div class="features">
+            <div>✅ Login system</div>
+            <div>✅ SQLite database</div>
+            <div>✅ Shared meetings across devices</div>
+            <div>✅ Admin dashboard</div>
+            <div>✅ Jitsi video room</div>
+            <div>✅ Meeting notes and status</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="schedule" class="view">
+        <div class="card form-card">
+          <h3>Schedule New Meeting</h3>
+          <p class="muted">Create a meeting record and share its Meeting ID with attendees.</p>
+
+          <div class="form-grid">
+            <label>Meeting Title<input id="meetingTitle" placeholder="Example: Weekly Management Meeting" /></label>
+            <label>Department
+              <select id="meetingDepartment">
+                <option>Management</option><option>Sales</option><option>Finance</option>
+                <option>Operations</option><option>IT</option><option>HR</option>
+              </select>
+            </label>
+            <label>Date<input id="meetingDate" type="date" /></label>
+            <label>Time<input id="meetingTime" type="time" /></label>
+            <label>Duration
+              <select id="meetingDuration">
+                <option value="30">30 Minutes</option><option value="45">45 Minutes</option>
+                <option value="60">1 Hour</option><option value="90">1.5 Hours</option><option value="120">2 Hours</option>
+              </select>
+            </label>
+            <label>Host Name<input id="meetingHost" placeholder="Meeting host" /></label>
+            <label class="wide">Participants Emails / Names<textarea id="meetingParticipants" placeholder="Example: karam@company.com, sherif@company.com"></textarea></label>
+            <label class="wide">Agenda<textarea id="meetingAgenda" placeholder="Write the meeting agenda..."></textarea></label>
+          </div>
+
+          <p id="scheduleError" class="error"></p>
+
+          <div class="actions">
+            <button class="primary" id="saveMeetingBtn">Save Meeting</button>
+            <button class="secondary" id="saveAndStartBtn">Save & Start</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="join" class="view">
+        <div class="card form-card">
+          <h3>Join Meeting</h3>
+          <p class="muted">Enter Meeting ID or paste a room name.</p>
+          <label>Meeting ID / Room Name<input id="joinRoomInput" placeholder="Example: Reap-Holding-Management-12345" /></label>
+          <div class="actions"><button class="primary" id="joinMeetingBtn">Join Meeting</button></div>
+        </div>
+      </section>
+
+      <section id="meetingRoom" class="view">
+        <div class="meeting-header">
+          <div>
+            <p class="eyebrow">Live Meeting Room</p>
+            <h3 id="liveMeetingTitle">Reap Holding Online Meet</h3>
+            <p id="liveMeetingMeta" class="muted"></p>
+          </div>
+          <div class="actions">
+            <button class="secondary" id="markCompletedBtn">Mark Completed</button>
+            <button class="danger" id="leaveMeetingBtn">Leave Room</button>
+          </div>
+        </div>
+
+        <div class="meeting-layout">
+          <div class="video-panel">
+            <div id="jitsiContainer">
+              <div class="loading-room">
+                <span>🎥</span><strong>Loading meeting room...</strong>
+                <p>Internet connection is required for the video room.</p>
+              </div>
+            </div>
+          </div>
+
+          <aside class="meeting-side">
+            <div class="card">
+              <h3>Meeting Info</h3>
+              <p class="muted">Room ID</p>
+              <strong id="roomIdText">-</strong>
+              <button class="secondary full" id="copyRoomBtn">Copy Meeting ID</button>
+            </div>
+
+            <div class="card">
+              <h3>Notes</h3>
+              <textarea id="meetingNotes" placeholder="Write meeting notes or decisions..."></textarea>
+              <button class="primary full" id="saveNotesBtn">Save Notes</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="meetings" class="view">
+        <div class="section-head">
+          <div><h3>My Meetings</h3><p class="muted">Scheduled and completed meeting records.</p></div>
+          <button class="primary" data-open="schedule">New Meeting</button>
+        </div>
+        <div id="meetingsList" class="list"></div>
+      </section>
+
+      <section id="admin" class="view">
+        <div class="cards-grid">
+          <div class="card stat-card"><span>Total Meetings</span><strong id="adminTotal">0</strong></div>
+          <div class="card stat-card"><span>Total Hours</span><strong id="adminHours">0</strong></div>
+          <div class="card stat-card"><span>Departments</span><strong id="adminDepartments">0</strong></div>
+        </div>
+
+        <div class="card"><h3>Department Usage</h3><div id="departmentUsage" class="usage-list"></div></div>
+        <div class="card"><h3>Recent Meetings</h3><div id="recentMeetings" class="list compact"></div></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://meet.jit.si/external_api.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
