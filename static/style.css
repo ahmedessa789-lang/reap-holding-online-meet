@@ -23,3 +23,16 @@
   color: var(--muted);
   word-break: break-all;
 }
+
+
+.register-box {
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.register-box h3 {
+  margin-bottom: 0;
+}

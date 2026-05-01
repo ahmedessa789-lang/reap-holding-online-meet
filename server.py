@@ -264,6 +264,47 @@ class AppHandler(BaseHTTPRequestHandler):
             safe_user = {k: user[k] for k in ["id", "name", "email", "role", "department"]}
             return self.json_response({"token": token, "user": safe_user})
 
+        if path == "/api/register":
+            data = self.read_json()
+            name = (data.get("name") or "").strip()
+            email = (data.get("email") or "").strip().lower()
+            password = data.get("password") or ""
+            department = (data.get("department") or "General").strip()
+
+            if not name:
+                return self.bad_request("User name is required")
+            if not email or "@" not in email:
+                return self.bad_request("Valid email is required")
+            if len(password) < 6:
+                return self.bad_request("Password must be at least 6 characters")
+
+            conn = db()
+            cur = conn.cursor()
+            try:
+                cur.execute("""
+                    INSERT INTO users (name, email, password_hash, role, department, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (
+                    name,
+                    email,
+                    hash_password(password),
+                    "user",
+                    department,
+                    datetime.now().isoformat(timespec="seconds"),
+                ))
+                conn.commit()
+                user_id = cur.lastrowid
+                cur.execute("""
+                    SELECT id, name, email, role, department, created_at
+                    FROM users WHERE id = ?
+                """, (user_id,))
+                new_user = row_to_dict(cur.fetchone())
+                conn.close()
+                return self.json_response({"user": new_user}, status=201)
+            except sqlite3.IntegrityError:
+                conn.close()
+                return self.bad_request("Email already exists")
+
         if path == "/api/logout":
             token = self.get_token()
             if token and token in TOKENS:

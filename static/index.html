@@ -36,6 +36,36 @@
 
       <p id="loginError" class="error"></p>
       <button id="loginBtn" class="primary full">Login</button>
+      <button id="showRegisterBtn" class="secondary full">Create New Account</button>
+
+      <div id="registerBox" class="register-box hidden">
+        <h3>Create Account</h3>
+        <p class="muted">New accounts are created as normal users only.</p>
+
+        <label>Full Name</label>
+        <input id="registerName" placeholder="Your name" />
+
+        <label>Email</label>
+        <input id="registerEmail" placeholder="email@company.com" />
+
+        <label>Password</label>
+        <input id="registerPassword" type="password" placeholder="At least 6 characters" />
+
+        <label>Department</label>
+        <select id="registerDepartment">
+          <option>General</option>
+          <option>Management</option>
+          <option>Sales</option>
+          <option>Finance</option>
+          <option>Operations</option>
+          <option>IT</option>
+          <option>HR</option>
+        </select>
+
+        <p id="registerError" class="error"></p>
+        <button id="registerBtn" class="primary full">Register</button>
+        <button id="hideRegisterBtn" class="secondary full">Back to Login</button>
+      </div>
     </div>
   </div>
 
@@ -58,8 +88,8 @@
       </nav>
 
       <div class="sidebar-note">
-        <strong>Real V3</strong>
-        <span>Backend + Database + Login + User Management + Share Links</span>
+        <strong>Real V4.1</strong>
+        <span>Backend + Database + Login + Registration + Share Links</span>
       </div>
     </aside>
 
@@ -104,10 +134,10 @@
         </div>
 
         <div class="card">
-          <h3>Real V3 includes</h3>
+          <h3>Real V4.1 includes</h3>
           <div class="features">
             <div>✅ Login system</div><div>✅ SQLite database</div><div>✅ Shared meetings</div>
-            <div>✅ Admin dashboard</div><div>✅ Create users</div><div>✅ Share meeting links</div>
+            <div>✅ Admin dashboard</div><div>✅ Public registration</div><div>✅ Share meeting links</div>
           </div>
         </div>
       </section>

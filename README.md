@@ -1,6 +1,6 @@
-# Reap Holding Online Meet - Real V3.1 Share Link Fix
+# Reap Holding Online Meet - Real V4.1 Auto Open Share Link
 
-Backend + Database + Login + Admin User Management + Share Meeting Links + Branded Jitsi meeting portal.
+Backend + Database + Login + Public Registration + Admin User Management + Share Meeting Links + Branded Jitsi meeting portal.
 
 ## Features
 
@@ -19,6 +19,9 @@ Backend + Database + Login + Admin User Management + Share Meeting Links + Brand
 - Delete users
 - Copy full shareable meeting links
 - Open shared meeting links after login
+- Public self-registration for normal users
+- Registered users cannot access Admin Dashboard
+- Shared meeting links auto-open after login
 - Fixed shared meetings for users who did not create the meeting
 - Shared data across devices on the same deployed server
 - No pip install required

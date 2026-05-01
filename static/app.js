@@ -47,13 +47,56 @@ async function login() {
     await loadMeetings();
     const sharedRoom = detectSharedRoomFromUrl();
     if (sharedRoom) {
-      showView("join");
-      showSharedRoomPrompt(sharedRoom);
+      await autoOpenSharedRoom(sharedRoom);
     } else {
       showView("home");
     }
   } catch (e) {
     $("loginError").innerText = e.message;
+  }
+}
+
+function showRegisterBox() {
+  $("registerBox").classList.remove("hidden");
+}
+
+function hideRegisterBox() {
+  $("registerBox").classList.add("hidden");
+  $("registerError").innerText = "";
+}
+
+async function registerUser() {
+  $("registerError").innerText = "";
+
+  const payload = {
+    name: $("registerName").value.trim(),
+    email: $("registerEmail").value.trim(),
+    password: $("registerPassword").value,
+    department: $("registerDepartment").value
+  };
+
+  if (!payload.name || !payload.email || !payload.password) {
+    $("registerError").innerText = "اكتب الاسم والإيميل والباسورد.";
+    return;
+  }
+
+  try {
+    await api("/api/register", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    $("emailInput").value = payload.email;
+    $("passwordInput").value = "";
+    $("registerName").value = "";
+    $("registerEmail").value = "";
+    $("registerPassword").value = "";
+    $("registerDepartment").value = "General";
+
+    hideRegisterBox();
+    alert("Account created successfully. You can login now.");
+  } catch (e) {
+    $("registerError").innerText = e.message;
   }
 }
 
@@ -75,8 +118,7 @@ async function checkSession() {
     await loadMeetings();
     const sharedRoom = detectSharedRoomFromUrl();
     if (sharedRoom) {
-      showView("join");
-      showSharedRoomPrompt(sharedRoom);
+      await autoOpenSharedRoom(sharedRoom);
     } else {
       showView("home");
     }
@@ -100,7 +142,14 @@ function makeShareLink(roomId) {
 
 function detectSharedRoomFromUrl() {
   const params = new URLSearchParams(window.location.search);
-  const room = params.get("room");
+  let room = params.get("room");
+
+  if (!room && window.location.hash) {
+    const hash = window.location.hash.replace("#", "");
+    const hashParams = new URLSearchParams(hash);
+    room = hashParams.get("room") || hash;
+  }
+
   pendingSharedRoom = room ? decodeURIComponent(room) : null;
   return pendingSharedRoom;
 }
@@ -110,6 +159,21 @@ function showSharedRoomPrompt(roomId) {
   $("sharedLinkBox").classList.remove("hidden");
   $("sharedLinkText").innerText = roomId;
   $("joinRoomInput").value = roomId;
+}
+
+function clearSharedRoomFromUrl() {
+  if (window.history && window.location.search.includes("room=")) {
+    window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
+  }
+}
+
+async function autoOpenSharedRoom(roomId) {
+  if (!roomId) return;
+  showView("join");
+  showSharedRoomPrompt(roomId);
+  setTimeout(() => {
+    joinMeeting();
+  }, 450);
 }
 
 function showView(viewId) {
@@ -201,7 +265,7 @@ async function joinMeeting() {
     await api(`/api/meetings/${encodeURIComponent(id)}`);
     openMeetingRoom(id);
   } catch (e) {
-    alert("Meeting ID not found. Please check the shared link or meeting ID.");
+    alert("Meeting link could not be opened. Please make sure the meeting still exists and try again.");
   }
 }
 
@@ -220,6 +284,7 @@ async function openMeetingRoom(id) {
   $("roomIdText").innerText = meeting.room_id;
   $("meetingNotes").value = meeting.notes || "";
   showView("meetingRoom");
+  clearSharedRoomFromUrl();
   setTimeout(() => startJitsi(meeting), 150);
 }
 
@@ -469,7 +534,11 @@ function initDates() {
 
 function bindEvents() {
   $("loginBtn").addEventListener("click", login);
+  $("showRegisterBtn").addEventListener("click", showRegisterBox);
+  $("hideRegisterBtn").addEventListener("click", hideRegisterBox);
+  $("registerBtn").addEventListener("click", registerUser);
   $("passwordInput").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
+  $("registerPassword").addEventListener("keydown", e => { if (e.key === "Enter") registerUser(); });
   $("logoutBtn").addEventListener("click", logout);
 
   navButtons().forEach(btn => btn.addEventListener("click", () => showView(btn.dataset.view)));
