@@ -1,6 +1,6 @@
-# Reap Holding Online Meet - Real V1
+# Reap Holding Online Meet - Real V2 Users
 
-Backend + Database + Login + Branded Jitsi meeting portal.
+Backend + Database + Login + Admin User Management + Branded Jitsi meeting portal.
 
 ## Features
 
@@ -14,6 +14,9 @@ Backend + Database + Login + Branded Jitsi meeting portal.
 - Meeting notes
 - Meeting status: Scheduled / Live / Completed / Cancelled
 - Admin dashboard
+- Create users from Admin Dashboard
+- List users
+- Delete users
 - Shared data across devices on the same deployed server
 - No pip install required
 
@@ -42,10 +45,3 @@ http://127.0.0.1:8005
 python server.py
 
 Railway will provide PORT automatically.
-
-## Important
-
-Internet is required for the video meeting room because it loads Jitsi Meet.
-For production, use HTTPS/domain like:
-
-meet.reapholding.com

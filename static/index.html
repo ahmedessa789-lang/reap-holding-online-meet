@@ -58,8 +58,8 @@
       </nav>
 
       <div class="sidebar-note">
-        <strong>Real V1</strong>
-        <span>Backend + SQLite Database + Login</span>
+        <strong>Real V2</strong>
+        <span>Backend + Database + Login + User Management</span>
       </div>
     </aside>
 
@@ -84,10 +84,7 @@
           <div>
             <p class="eyebrow">Reap Holding Online Meet</p>
             <h3>Secure branded online meetings for your company</h3>
-            <p>
-              Start instant meetings, schedule sessions, invite participants,
-              and manage meeting records from one corporate dashboard.
-            </p>
+            <p>Start instant meetings, schedule sessions, invite participants, and manage meeting records from one corporate dashboard.</p>
             <div class="hero-actions">
               <button class="primary" id="instantMeetingBtn">Start Instant Meeting</button>
               <button class="secondary" data-open="schedule">Schedule Meeting</button>
@@ -107,14 +104,10 @@
         </div>
 
         <div class="card">
-          <h3>Real V1 includes</h3>
+          <h3>Real V2 includes</h3>
           <div class="features">
-            <div>✅ Login system</div>
-            <div>✅ SQLite database</div>
-            <div>✅ Shared meetings across devices</div>
-            <div>✅ Admin dashboard</div>
-            <div>✅ Jitsi video room</div>
-            <div>✅ Meeting notes and status</div>
+            <div>✅ Login system</div><div>✅ SQLite database</div><div>✅ Shared meetings</div>
+            <div>✅ Admin dashboard</div><div>✅ Create users</div><div>✅ Jitsi video room</div>
           </div>
         </div>
       </section>
@@ -129,7 +122,7 @@
             <label>Department
               <select id="meetingDepartment">
                 <option>Management</option><option>Sales</option><option>Finance</option>
-                <option>Operations</option><option>IT</option><option>HR</option>
+                <option>Operations</option><option>IT</option><option>HR</option><option>General</option>
               </select>
             </label>
             <label>Date<input id="meetingDate" type="date" /></label>
@@ -219,6 +212,31 @@
         </div>
 
         <div class="card"><h3>Department Usage</h3><div id="departmentUsage" class="usage-list"></div></div>
+
+        <div class="card">
+          <div class="section-head small-head">
+            <div>
+              <h3>User Management</h3>
+              <p class="muted">Admin can create users who can login and create meetings.</p>
+            </div>
+          </div>
+
+          <div class="user-create-grid">
+            <input id="newUserName" placeholder="Full name" />
+            <input id="newUserEmail" placeholder="Email address" />
+            <input id="newUserPassword" placeholder="Password" type="password" />
+            <select id="newUserRole"><option value="user">User</option><option value="admin">Admin</option></select>
+            <select id="newUserDepartment">
+              <option>Management</option><option>Sales</option><option>Finance</option>
+              <option>Operations</option><option>IT</option><option>HR</option><option>General</option>
+            </select>
+            <button id="createUserBtn" class="primary">Create User</button>
+          </div>
+
+          <p id="userCreateError" class="error"></p>
+          <div id="usersList" class="users-list"></div>
+        </div>
+
         <div class="card"><h3>Recent Meetings</h3><div id="recentMeetings" class="list compact"></div></div>
       </section>
     </main>

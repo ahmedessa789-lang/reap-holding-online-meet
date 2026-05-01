@@ -1,6 +1,5 @@
-
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 from pathlib import Path
 import sqlite3
 import json
@@ -24,6 +23,9 @@ def db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+def row_to_dict(row):
+    return dict(row) if row else None
 
 def init_db():
     conn = db()
@@ -78,16 +80,13 @@ def init_db():
     conn.commit()
     conn.close()
 
-def row_to_dict(row):
-    return dict(row) if row else None
-
 def make_room_id(title: str) -> str:
     clean = "".join(ch if ch.isalnum() else "-" for ch in title).strip("-")
     clean = "-".join(part for part in clean.split("-") if part)[:28] or "Meeting"
     return f"Reap-Holding-{clean}-{secrets.randbelow(90000) + 10000}"
 
 class AppHandler(BaseHTTPRequestHandler):
-    server_version = "ReapHoldingOnlineMeet/1.0"
+    server_version = "ReapHoldingOnlineMeet/2.0"
 
     def do_GET(self):
         parsed = urlparse(self.path)
@@ -128,7 +127,7 @@ class AppHandler(BaseHTTPRequestHandler):
 
     def handle_api_get(self, path):
         if path == "/api/health":
-            return self.json_response({"status": "ok", "app": "Reap Holding Online Meet"})
+            return self.json_response({"status": "ok", "app": "Reap Holding Online Meet V2"})
 
         if path == "/api/me":
             user = self.current_user()
@@ -136,49 +135,23 @@ class AppHandler(BaseHTTPRequestHandler):
                 return self.unauthorized()
             return self.json_response({"user": user})
 
-        if path == "/api/meetings":
+        if path == "/api/admin/users":
             user = self.current_user()
             if not user:
                 return self.unauthorized()
-            conn = db()
-            cur = conn.cursor()
-            if user["role"] == "admin":
-                cur.execute("""
-                    SELECT m.*, u.name AS created_by_name
-                    FROM meetings m
-                    LEFT JOIN users u ON u.id = m.created_by
-                    ORDER BY m.id DESC
-                """)
-            else:
-                cur.execute("""
-                    SELECT m.*, u.name AS created_by_name
-                    FROM meetings m
-                    LEFT JOIN users u ON u.id = m.created_by
-                    WHERE m.created_by = ?
-                    ORDER BY m.id DESC
-                """, (user["id"],))
-            rows = [row_to_dict(r) for r in cur.fetchall()]
-            conn.close()
-            return self.json_response({"meetings": rows})
+            if user["role"] != "admin":
+                return self.forbidden("Admin access required")
 
-        if path.startswith("/api/meetings/"):
-            user = self.current_user()
-            if not user:
-                return self.unauthorized()
-            room_id = path.split("/api/meetings/", 1)[1]
             conn = db()
             cur = conn.cursor()
             cur.execute("""
-                SELECT m.*, u.name AS created_by_name
-                FROM meetings m
-                LEFT JOIN users u ON u.id = m.created_by
-                WHERE m.room_id = ?
-            """, (room_id,))
-            row = cur.fetchone()
+                SELECT id, name, email, role, department, created_at
+                FROM users
+                ORDER BY id DESC
+            """)
+            rows = [row_to_dict(r) for r in cur.fetchall()]
             conn.close()
-            if not row:
-                return self.not_found("Meeting not found")
-            return self.json_response({"meeting": row_to_dict(row)})
+            return self.json_response({"users": rows})
 
         if path == "/api/admin/stats":
             user = self.current_user()
@@ -223,6 +196,50 @@ class AppHandler(BaseHTTPRequestHandler):
                 "recent": recent,
             })
 
+        if path == "/api/meetings":
+            user = self.current_user()
+            if not user:
+                return self.unauthorized()
+            conn = db()
+            cur = conn.cursor()
+            if user["role"] == "admin":
+                cur.execute("""
+                    SELECT m.*, u.name AS created_by_name
+                    FROM meetings m
+                    LEFT JOIN users u ON u.id = m.created_by
+                    ORDER BY m.id DESC
+                """)
+            else:
+                cur.execute("""
+                    SELECT m.*, u.name AS created_by_name
+                    FROM meetings m
+                    LEFT JOIN users u ON u.id = m.created_by
+                    WHERE m.created_by = ?
+                    ORDER BY m.id DESC
+                """, (user["id"],))
+            rows = [row_to_dict(r) for r in cur.fetchall()]
+            conn.close()
+            return self.json_response({"meetings": rows})
+
+        if path.startswith("/api/meetings/"):
+            user = self.current_user()
+            if not user:
+                return self.unauthorized()
+            room_id = unquote(path.split("/api/meetings/", 1)[1])
+            conn = db()
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT m.*, u.name AS created_by_name
+                FROM meetings m
+                LEFT JOIN users u ON u.id = m.created_by
+                WHERE m.room_id = ?
+            """, (room_id,))
+            row = cur.fetchone()
+            conn.close()
+            if not row:
+                return self.not_found("Meeting not found")
+            return self.json_response({"meeting": row_to_dict(row)})
+
         return self.not_found("Endpoint not found")
 
     def handle_api_post(self, path):
@@ -252,6 +269,56 @@ class AppHandler(BaseHTTPRequestHandler):
             if token and token in TOKENS:
                 del TOKENS[token]
             return self.json_response({"ok": True})
+
+        if path == "/api/admin/users":
+            user = self.current_user()
+            if not user:
+                return self.unauthorized()
+            if user["role"] != "admin":
+                return self.forbidden("Admin access required")
+
+            data = self.read_json()
+            name = (data.get("name") or "").strip()
+            email = (data.get("email") or "").strip().lower()
+            password = data.get("password") or ""
+            role = (data.get("role") or "user").strip().lower()
+            department = (data.get("department") or "General").strip()
+
+            if not name:
+                return self.bad_request("User name is required")
+            if not email or "@" not in email:
+                return self.bad_request("Valid email is required")
+            if len(password) < 6:
+                return self.bad_request("Password must be at least 6 characters")
+            if role not in {"admin", "user"}:
+                return self.bad_request("Invalid role")
+
+            conn = db()
+            cur = conn.cursor()
+            try:
+                cur.execute("""
+                    INSERT INTO users (name, email, password_hash, role, department, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (
+                    name,
+                    email,
+                    hash_password(password),
+                    role,
+                    department,
+                    datetime.now().isoformat(timespec="seconds"),
+                ))
+                conn.commit()
+                user_id = cur.lastrowid
+                cur.execute("""
+                    SELECT id, name, email, role, department, created_at
+                    FROM users WHERE id = ?
+                """, (user_id,))
+                new_user = row_to_dict(cur.fetchone())
+                conn.close()
+                return self.json_response({"user": new_user}, status=201)
+            except sqlite3.IntegrityError:
+                conn.close()
+                return self.bad_request("Email already exists")
 
         if path == "/api/meetings":
             user = self.current_user()
@@ -312,7 +379,7 @@ class AppHandler(BaseHTTPRequestHandler):
             return self.unauthorized()
 
         if path.startswith("/api/meetings/"):
-            room_id = path.split("/api/meetings/", 1)[1]
+            room_id = unquote(path.split("/api/meetings/", 1)[1])
             data = self.read_json()
 
             allowed_status = {"Scheduled", "Live", "Completed", "Cancelled"}
@@ -369,12 +436,32 @@ class AppHandler(BaseHTTPRequestHandler):
         user = self.current_user()
         if not user:
             return self.unauthorized()
-
         if user["role"] != "admin":
             return self.forbidden("Admin access required")
 
+        if path.startswith("/api/admin/users/"):
+            user_id_text = path.split("/api/admin/users/", 1)[1]
+            try:
+                user_id = int(user_id_text)
+            except ValueError:
+                return self.bad_request("Invalid user id")
+
+            if user_id == user["id"]:
+                return self.bad_request("You cannot delete your own admin account while logged in")
+
+            conn = db()
+            cur = conn.cursor()
+            cur.execute("DELETE FROM users WHERE id = ?", (user_id,))
+            conn.commit()
+            deleted = cur.rowcount
+            conn.close()
+
+            if not deleted:
+                return self.not_found("User not found")
+            return self.json_response({"deleted": True, "user_id": user_id})
+
         if path.startswith("/api/meetings/"):
-            room_id = path.split("/api/meetings/", 1)[1]
+            room_id = unquote(path.split("/api/meetings/", 1)[1])
             conn = db()
             cur = conn.cursor()
             cur.execute("DELETE FROM meetings WHERE room_id = ?", (room_id,))
@@ -447,7 +534,7 @@ class AppHandler(BaseHTTPRequestHandler):
 def main():
     init_db()
     server = ThreadingHTTPServer(("0.0.0.0", PORT), AppHandler)
-    print(f"Reap Holding Online Meet running on http://127.0.0.1:{PORT}")
+    print(f"Reap Holding Online Meet V2 running on http://127.0.0.1:{PORT}")
     server.serve_forever()
 
 if __name__ == "__main__":

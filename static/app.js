@@ -1,7 +1,7 @@
-
 let token = localStorage.getItem("rh_meet_token") || "";
 let currentUser = null;
 let meetings = [];
+let adminUsers = [];
 let currentMeetingId = null;
 let jitsiApi = null;
 
@@ -28,6 +28,7 @@ function showApp() {
   $("appPage").classList.remove("hidden");
   $("userName").innerText = currentUser.name;
   $("userRole").innerText = currentUser.role;
+  $("meetingHost").value = currentUser.name;
   document.querySelectorAll(".admin-only").forEach(el => el.classList.toggle("hidden", currentUser.role !== "admin"));
 }
 
@@ -248,6 +249,86 @@ async function deleteMeeting(id) {
   await loadMeetings();
 }
 
+async function loadUsers() {
+  if (!currentUser || currentUser.role !== "admin") return;
+  try {
+    const data = await api("/api/admin/users");
+    adminUsers = data.users || [];
+    renderUsers();
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+async function createUser() {
+  if (!currentUser || currentUser.role !== "admin") return;
+
+  $("userCreateError").innerText = "";
+
+  const payload = {
+    name: $("newUserName").value.trim(),
+    email: $("newUserEmail").value.trim(),
+    password: $("newUserPassword").value,
+    role: $("newUserRole").value,
+    department: $("newUserDepartment").value
+  };
+
+  if (!payload.name || !payload.email || !payload.password) {
+    $("userCreateError").innerText = "اكتب الاسم والإيميل والباسورد.";
+    return;
+  }
+
+  try {
+    await api("/api/admin/users", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    $("newUserName").value = "";
+    $("newUserEmail").value = "";
+    $("newUserPassword").value = "";
+    $("newUserRole").value = "user";
+    $("newUserDepartment").value = "General";
+
+    await loadUsers();
+    alert("User created successfully.");
+  } catch (e) {
+    $("userCreateError").innerText = e.message;
+  }
+}
+
+async function deleteUser(userId) {
+  if (!confirm("Delete this user?")) return;
+  try {
+    await api(`/api/admin/users/${userId}`, {method: "DELETE"});
+    await loadUsers();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+function renderUsers() {
+  const box = $("usersList");
+  if (!box) return;
+
+  if (!adminUsers.length) {
+    box.innerHTML = `<p class="muted">No users found.</p>`;
+    return;
+  }
+
+  box.innerHTML = adminUsers.map(u => `
+    <div class="user-row">
+      <strong>${escapeHtml(u.name)}</strong>
+      <span>${escapeHtml(u.email)}</span>
+      <small>${escapeHtml(u.role)}</small>
+      <small>${escapeHtml(u.department)}</small>
+      ${currentUser && currentUser.id === u.id
+        ? `<button class="secondary" disabled>Current</button>`
+        : `<button class="danger" onclick="deleteUser(${u.id})">Delete</button>`}
+    </div>
+  `).join("");
+}
+
 function renderMeetings() {
   const list = $("meetingsList");
   if (!list) return;
@@ -299,6 +380,8 @@ async function renderAdmin() {
         </div>
       </article>
     `).join("") || `<p class="muted">No meetings yet.</p>`;
+
+    await loadUsers();
   } catch (e) {
     console.warn(e);
   }
@@ -349,10 +432,12 @@ function bindEvents() {
   $("markCompletedBtn").addEventListener("click", markCompleted);
   $("saveNotesBtn").addEventListener("click", saveNotes);
   $("copyRoomBtn").addEventListener("click", copyRoomId);
+  $("createUserBtn").addEventListener("click", createUser);
 }
 
 window.openMeetingRoom = openMeetingRoom;
 window.deleteMeeting = deleteMeeting;
+window.deleteUser = deleteUser;
 window.copyText = copyText;
 
 initDates();
