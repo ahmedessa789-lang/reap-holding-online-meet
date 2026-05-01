@@ -1,6 +1,6 @@
-# Reap Holding Online Meet - Real V2 Users
+# Reap Holding Online Meet - Real V3 Share Link
 
-Backend + Database + Login + Admin User Management + Branded Jitsi meeting portal.
+Backend + Database + Login + Admin User Management + Share Meeting Links + Branded Jitsi meeting portal.
 
 ## Features
 
@@ -17,6 +17,8 @@ Backend + Database + Login + Admin User Management + Branded Jitsi meeting porta
 - Create users from Admin Dashboard
 - List users
 - Delete users
+- Copy full shareable meeting links
+- Open shared meeting links after login
 - Shared data across devices on the same deployed server
 - No pip install required
 

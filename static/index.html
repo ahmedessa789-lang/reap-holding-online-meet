@@ -58,8 +58,8 @@
       </nav>
 
       <div class="sidebar-note">
-        <strong>Real V2</strong>
-        <span>Backend + Database + Login + User Management</span>
+        <strong>Real V3</strong>
+        <span>Backend + Database + Login + User Management + Share Links</span>
       </div>
     </aside>
 
@@ -104,10 +104,10 @@
         </div>
 
         <div class="card">
-          <h3>Real V2 includes</h3>
+          <h3>Real V3 includes</h3>
           <div class="features">
             <div>✅ Login system</div><div>✅ SQLite database</div><div>✅ Shared meetings</div>
-            <div>✅ Admin dashboard</div><div>✅ Create users</div><div>✅ Jitsi video room</div>
+            <div>✅ Admin dashboard</div><div>✅ Create users</div><div>✅ Share meeting links</div>
           </div>
         </div>
       </section>
@@ -150,7 +150,12 @@
       <section id="join" class="view">
         <div class="card form-card">
           <h3>Join Meeting</h3>
-          <p class="muted">Enter Meeting ID or paste a room name.</p>
+          <p class="muted">Enter Meeting ID, or open a shared meeting link directly.</p>
+          <div id="sharedLinkBox" class="share-alert hidden">
+            <strong>Shared meeting detected</strong>
+            <span id="sharedLinkText"></span>
+            <button id="openSharedMeetingBtn" class="primary">Open Shared Meeting</button>
+          </div>
           <label>Meeting ID / Room Name<input id="joinRoomInput" placeholder="Example: Reap-Holding-Management-12345" /></label>
           <div class="actions"><button class="primary" id="joinMeetingBtn">Join Meeting</button></div>
         </div>
@@ -185,6 +190,7 @@
               <p class="muted">Room ID</p>
               <strong id="roomIdText">-</strong>
               <button class="secondary full" id="copyRoomBtn">Copy Meeting ID</button>
+              <button class="primary full" id="copyShareLinkBtn">Copy Share Link</button>
             </div>
 
             <div class="card">

@@ -3,6 +3,7 @@ let currentUser = null;
 let meetings = [];
 let adminUsers = [];
 let currentMeetingId = null;
+let pendingSharedRoom = null;
 let jitsiApi = null;
 
 const $ = id => document.getElementById(id);
@@ -44,7 +45,13 @@ async function login() {
     localStorage.setItem("rh_meet_token", token);
     showApp();
     await loadMeetings();
-    showView("home");
+    const sharedRoom = detectSharedRoomFromUrl();
+    if (sharedRoom) {
+      showView("join");
+      showSharedRoomPrompt(sharedRoom);
+    } else {
+      showView("home");
+    }
   } catch (e) {
     $("loginError").innerText = e.message;
   }
@@ -66,7 +73,13 @@ async function checkSession() {
     currentUser = data.user;
     showApp();
     await loadMeetings();
-    showView("home");
+    const sharedRoom = detectSharedRoomFromUrl();
+    if (sharedRoom) {
+      showView("join");
+      showSharedRoomPrompt(sharedRoom);
+    } else {
+      showView("home");
+    }
   } catch {
     localStorage.removeItem("rh_meet_token");
     token = "";
@@ -77,6 +90,26 @@ async function checkSession() {
 function formatDateTime(date, time) {
   if (!date && !time) return "Instant meeting";
   return `${date || ""} ${time || ""}`.trim();
+}
+
+function makeShareLink(roomId) {
+  const url = new URL(window.location.origin);
+  url.searchParams.set("room", roomId);
+  return url.toString();
+}
+
+function detectSharedRoomFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const room = params.get("room");
+  pendingSharedRoom = room ? decodeURIComponent(room) : null;
+  return pendingSharedRoom;
+}
+
+function showSharedRoomPrompt(roomId) {
+  if (!roomId || !$("sharedLinkBox")) return;
+  $("sharedLinkBox").classList.remove("hidden");
+  $("sharedLinkText").innerText = roomId;
+  $("joinRoomInput").value = roomId;
 }
 
 function showView(viewId) {
@@ -243,6 +276,19 @@ function copyRoomId() {
   navigator.clipboard.writeText(text).then(() => alert("Meeting ID copied.")).catch(() => alert(text));
 }
 
+function copyShareLink(roomId = null) {
+  const id = roomId || $("roomIdText").innerText;
+  const link = makeShareLink(id);
+  navigator.clipboard.writeText(link).then(() => alert("Share link copied.")).catch(() => alert(link));
+}
+
+function openSharedMeeting() {
+  const room = pendingSharedRoom || $("joinRoomInput").value.trim();
+  if (!room) return alert("No shared meeting found.");
+  $("joinRoomInput").value = room;
+  joinMeeting();
+}
+
 async function deleteMeeting(id) {
   if (!confirm("Delete this meeting?")) return;
   await api(`/api/meetings/${encodeURIComponent(id)}`, {method: "DELETE"});
@@ -351,6 +397,7 @@ function renderMeetings() {
       <div class="actions">
         <button class="primary" onclick="openMeetingRoom('${m.room_id}')">Start / Join</button>
         <button class="secondary" onclick="copyText('${m.room_id}')">Copy ID</button>
+        <button class="primary" onclick="copyShareLink('${m.room_id}')">Copy Link</button>
         ${currentUser && currentUser.role === "admin" ? `<button class="danger" onclick="deleteMeeting('${m.room_id}')">Delete</button>` : ""}
       </div>
     </article>
@@ -432,12 +479,15 @@ function bindEvents() {
   $("markCompletedBtn").addEventListener("click", markCompleted);
   $("saveNotesBtn").addEventListener("click", saveNotes);
   $("copyRoomBtn").addEventListener("click", copyRoomId);
+  $("copyShareLinkBtn").addEventListener("click", () => copyShareLink());
+  $("openSharedMeetingBtn").addEventListener("click", openSharedMeeting);
   $("createUserBtn").addEventListener("click", createUser);
 }
 
 window.openMeetingRoom = openMeetingRoom;
 window.deleteMeeting = deleteMeeting;
 window.deleteUser = deleteUser;
+window.copyShareLink = copyShareLink;
 window.copyText = copyText;
 
 initDates();
