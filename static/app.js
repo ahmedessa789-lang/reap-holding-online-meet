@@ -196,9 +196,13 @@ async function startInstantMeeting() {
 async function joinMeeting() {
   const id = $("joinRoomInput").value.trim();
   if (!id) return alert("Enter Meeting ID first.");
-  const found = meetings.find(m => m.room_id === id);
-  if (!found) return alert("Meeting ID not found. Create/schedule it first.");
-  openMeetingRoom(id);
+
+  try {
+    await api(`/api/meetings/${encodeURIComponent(id)}`);
+    openMeetingRoom(id);
+  } catch (e) {
+    alert("Meeting ID not found. Please check the shared link or meeting ID.");
+  }
 }
 
 async function openMeetingRoom(id) {
