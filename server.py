@@ -196,6 +196,64 @@ class AppHandler(BaseHTTPRequestHandler):
                 "recent": recent,
             })
 
+        if path == "/api/meetings/open-shared":
+            user = self.current_user()
+            if not user:
+                return self.unauthorized()
+
+            data = self.read_json()
+            room_id = (data.get("room_id") or "").strip()
+            if not room_id:
+                return self.bad_request("Meeting room id is required")
+
+            conn = db()
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT m.*, u.name AS created_by_name
+                FROM meetings m
+                LEFT JOIN users u ON u.id = m.created_by
+                WHERE m.room_id = ?
+            """, (room_id,))
+            row = cur.fetchone()
+
+            if row:
+                meeting = row_to_dict(row)
+                conn.close()
+                return self.json_response({"meeting": meeting, "created": False})
+
+            now = datetime.now().isoformat(timespec="seconds")
+            cur.execute("""
+                INSERT INTO meetings (
+                    room_id, title, department, meeting_date, meeting_time, duration,
+                    host_name, participants, agenda, notes, status, created_by, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                room_id,
+                "Shared Meeting Link",
+                user["department"] or "General",
+                datetime.now().date().isoformat(),
+                datetime.now().strftime("%H:%M"),
+                60,
+                user["name"],
+                "",
+                "Opened from shared meeting link",
+                "",
+                "Live",
+                user["id"],
+                now,
+            ))
+            conn.commit()
+            cur.execute("""
+                SELECT m.*, u.name AS created_by_name
+                FROM meetings m
+                LEFT JOIN users u ON u.id = m.created_by
+                WHERE m.room_id = ?
+            """, (room_id,))
+            meeting = row_to_dict(cur.fetchone())
+            conn.close()
+            return self.json_response({"meeting": meeting, "created": True}, status=201)
+
         if path == "/api/meetings":
             user = self.current_user()
             if not user:
@@ -360,6 +418,64 @@ class AppHandler(BaseHTTPRequestHandler):
             except sqlite3.IntegrityError:
                 conn.close()
                 return self.bad_request("Email already exists")
+
+        if path == "/api/meetings/open-shared":
+            user = self.current_user()
+            if not user:
+                return self.unauthorized()
+
+            data = self.read_json()
+            room_id = (data.get("room_id") or "").strip()
+            if not room_id:
+                return self.bad_request("Meeting room id is required")
+
+            conn = db()
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT m.*, u.name AS created_by_name
+                FROM meetings m
+                LEFT JOIN users u ON u.id = m.created_by
+                WHERE m.room_id = ?
+            """, (room_id,))
+            row = cur.fetchone()
+
+            if row:
+                meeting = row_to_dict(row)
+                conn.close()
+                return self.json_response({"meeting": meeting, "created": False})
+
+            now = datetime.now().isoformat(timespec="seconds")
+            cur.execute("""
+                INSERT INTO meetings (
+                    room_id, title, department, meeting_date, meeting_time, duration,
+                    host_name, participants, agenda, notes, status, created_by, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                room_id,
+                "Shared Meeting Link",
+                user["department"] or "General",
+                datetime.now().date().isoformat(),
+                datetime.now().strftime("%H:%M"),
+                60,
+                user["name"],
+                "",
+                "Opened from shared meeting link",
+                "",
+                "Live",
+                user["id"],
+                now,
+            ))
+            conn.commit()
+            cur.execute("""
+                SELECT m.*, u.name AS created_by_name
+                FROM meetings m
+                LEFT JOIN users u ON u.id = m.created_by
+                WHERE m.room_id = ?
+            """, (room_id,))
+            meeting = row_to_dict(cur.fetchone())
+            conn.close()
+            return self.json_response({"meeting": meeting, "created": True}, status=201)
 
         if path == "/api/meetings":
             user = self.current_user()

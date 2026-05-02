@@ -1,4 +1,4 @@
-# Reap Holding Online Meet - Real V4.3 Remove Demo Accounts + Remember Me
+# Reap Holding Online Meet - Real V4.4 Robust Share Links
 
 Backend + Database + Login + Public Registration + Admin User Management + Share Meeting Links + Eissa Digital Theme + Branded Jitsi meeting portal.
 
@@ -68,3 +68,9 @@ This version applies Eissa Digital Theme:
 - Removed Demo Accounts box from login page
 - Added Remember Me checkbox
 - Saves username and password locally when the user chooses to remember them
+
+
+## Robust Share Links
+
+- Shared meeting links now open even if the meeting record was lost after redeploy.
+- If the room id is not found in SQLite, the app creates a meeting record automatically and opens the Jitsi room.

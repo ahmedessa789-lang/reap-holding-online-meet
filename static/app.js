@@ -297,10 +297,15 @@ async function joinMeeting() {
   if (!id) return alert("Enter Meeting ID first.");
 
   try {
-    await api(`/api/meetings/${encodeURIComponent(id)}`);
-    openMeetingRoom(id);
+    const data = await api("/api/meetings/open-shared", {
+      method: "POST",
+      body: JSON.stringify({room_id: id})
+    });
+
+    await loadMeetings();
+    openMeetingRoom(data.meeting.room_id);
   } catch (e) {
-    alert("Meeting link could not be opened. Please make sure the meeting still exists and try again.");
+    alert("Meeting link could not be opened. Please try again or create a new meeting.");
   }
 }
 
