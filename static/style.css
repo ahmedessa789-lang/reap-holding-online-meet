@@ -221,3 +221,24 @@ textarea:focus {
     white-space: normal;
   }
 }
+
+
+.remember-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.remember-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #22d3ee;
+  cursor: pointer;
+}
+
+.remember-row span {
+  font-size: 14px;
+}

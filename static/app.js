@@ -19,6 +19,40 @@ async function api(path, options = {}) {
   return data;
 }
 
+
+function loadRememberedCredentials() {
+  const remember = localStorage.getItem("rh_meet_remember") === "true";
+  const savedEmail = localStorage.getItem("rh_meet_saved_email") || "";
+  const savedPassword = localStorage.getItem("rh_meet_saved_password") || "";
+
+  if ($("rememberMe")) $("rememberMe").checked = remember;
+  if (remember) {
+    $("emailInput").value = savedEmail;
+    $("passwordInput").value = savedPassword;
+  }
+}
+
+function handleRememberMeOnLogin() {
+  const remember = $("rememberMe") && $("rememberMe").checked;
+  if (remember) {
+    localStorage.setItem("rh_meet_remember", "true");
+    localStorage.setItem("rh_meet_saved_email", $("emailInput").value.trim());
+    localStorage.setItem("rh_meet_saved_password", $("passwordInput").value);
+  } else {
+    localStorage.removeItem("rh_meet_remember");
+    localStorage.removeItem("rh_meet_saved_email");
+    localStorage.removeItem("rh_meet_saved_password");
+  }
+}
+
+function clearRememberedCredentialsIfUnchecked() {
+  if (!$("rememberMe").checked) {
+    localStorage.removeItem("rh_meet_remember");
+    localStorage.removeItem("rh_meet_saved_email");
+    localStorage.removeItem("rh_meet_saved_password");
+  }
+}
+
 function showLogin() {
   $("loginPage").classList.remove("hidden");
   $("appPage").classList.add("hidden");
@@ -43,6 +77,7 @@ async function login() {
     token = data.token;
     currentUser = data.user;
     localStorage.setItem("rh_meet_token", token);
+    handleRememberMeOnLogin();
     showApp();
     await loadMeetings();
     const sharedRoom = detectSharedRoomFromUrl();
@@ -534,6 +569,7 @@ function initDates() {
 
 function bindEvents() {
   $("loginBtn").addEventListener("click", login);
+  $("rememberMe").addEventListener("change", clearRememberedCredentialsIfUnchecked);
   $("showRegisterBtn").addEventListener("click", showRegisterBox);
   $("hideRegisterBtn").addEventListener("click", hideRegisterBox);
   $("registerBtn").addEventListener("click", registerUser);
@@ -565,4 +601,5 @@ window.copyText = copyText;
 
 initDates();
 bindEvents();
+loadRememberedCredentials();
 checkSession();

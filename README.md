@@ -1,4 +1,4 @@
-# Reap Holding Online Meet - Real V4.2 Eissa Digital Theme
+# Reap Holding Online Meet - Real V4.3 Remove Demo Accounts + Remember Me
 
 Backend + Database + Login + Public Registration + Admin User Management + Share Meeting Links + Eissa Digital Theme + Branded Jitsi meeting portal.
 
@@ -61,3 +61,10 @@ This version applies Eissa Digital Theme:
 - Digital Solution by Ahmed Eissa attribution
 - Branded footer
 - Updated icon style
+
+
+## Additional Login Improvements
+
+- Removed Demo Accounts box from login page
+- Added Remember Me checkbox
+- Saves username and password locally when the user chooses to remember them
