@@ -2,6 +2,7 @@ let token = localStorage.getItem("rh_meet_token") || "";
 let currentUser = null;
 let meetings = [];
 let adminUsers = [];
+let companyContacts = [];
 let currentMeetingId = null;
 let pendingSharedRoom = null;
 let jitsiApi = null;
@@ -80,6 +81,7 @@ async function login() {
     handleRememberMeOnLogin();
     showApp();
     await loadMeetings();
+    await loadCompanyContacts();
     const sharedRoom = detectSharedRoomFromUrl();
     if (sharedRoom) {
       await autoOpenSharedRoom(sharedRoom);
@@ -107,7 +109,8 @@ async function registerUser() {
     name: $("registerName").value.trim(),
     email: $("registerEmail").value.trim(),
     password: $("registerPassword").value,
-    department: $("registerDepartment").value
+    department: $("registerDepartment").value,
+    phone: $("registerPhone").value.trim()
   };
 
   if (!payload.name || !payload.email || !payload.password) {
@@ -126,6 +129,7 @@ async function registerUser() {
     $("registerName").value = "";
     $("registerEmail").value = "";
     $("registerPassword").value = "";
+    $("registerPhone").value = "";
     $("registerDepartment").value = "General";
 
     hideRegisterBox();
@@ -151,6 +155,7 @@ async function checkSession() {
     currentUser = data.user;
     showApp();
     await loadMeetings();
+    await loadCompanyContacts();
     const sharedRoom = detectSharedRoomFromUrl();
     if (sharedRoom) {
       await autoOpenSharedRoom(sharedRoom);
@@ -343,7 +348,15 @@ function startJitsi(meeting) {
     parentNode: container,
     userInfo: {displayName: currentUser.name},
     configOverwrite: {prejoinPageEnabled: true, startWithAudioMuted: true},
-    interfaceConfigOverwrite: {SHOW_JITSI_WATERMARK: false, SHOW_WATERMARK_FOR_GUESTS: false, DEFAULT_BACKGROUND: "#020617"}
+    interfaceConfigOverwrite: {
+      SHOW_JITSI_WATERMARK: false,
+      SHOW_WATERMARK_FOR_GUESTS: false,
+      DEFAULT_BACKGROUND: "#020617",
+      TOOLBAR_BUTTONS: [
+        "microphone", "camera", "desktop", "chat", "raisehand", "tileview",
+        "fullscreen", "settings", "videoquality", "hangup"
+      ]
+    }
   });
 }
 
@@ -391,6 +404,81 @@ function copyShareLink(roomId = null) {
   navigator.clipboard.writeText(link).then(() => alert("Share link copied.")).catch(() => alert(link));
 }
 
+function getCurrentMeetingLink() {
+  const id = currentMeetingId || ($("roomIdText") ? $("roomIdText").innerText : "") || pendingSharedRoom || "";
+  if (!id || id === "-") return "";
+  return makeShareLink(id);
+}
+
+function normalizeEgyptPhone(phone) {
+  let clean = String(phone || "").replace(/\D/g, "");
+  if (!clean) return "";
+  if (clean.startsWith("00")) clean = clean.slice(2);
+  if (clean.startsWith("0")) clean = "2" + clean;
+  return clean;
+}
+
+function openWhatsAppInvite(phone, contactName = "") {
+  const cleanPhone = normalizeEgyptPhone(phone);
+  if (!cleanPhone) {
+    alert("No WhatsApp number found for this contact.");
+    return;
+  }
+  const meetingLink = getCurrentMeetingLink();
+  if (!meetingLink) {
+    alert("Open or create a meeting first, then send the WhatsApp invite.");
+    return;
+  }
+  const message = `Hello ${contactName || ""},\nYou are invited to join Reap Holding Online Meeting:\n\n${meetingLink}`;
+  window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, "_blank");
+}
+
+async function loadCompanyContacts() {
+  if (!currentUser) return;
+  try {
+    const data = await api("/api/users/contacts");
+    companyContacts = data.contacts || [];
+    renderContactsDirectory();
+  } catch (e) {
+    console.warn("Could not load contacts", e);
+  }
+}
+
+function renderContactsDirectory() {
+  const box = $("companyContactsList");
+  if (!box) return;
+
+  const searchTerm = ($("contactsSearch") ? $("contactsSearch").value : "").trim().toLowerCase();
+  const filtered = companyContacts.filter(c => {
+    const combined = `${c.name || ""} ${c.email || ""} ${c.department || ""} ${c.phone || ""}`.toLowerCase();
+    return !searchTerm || combined.includes(searchTerm);
+  });
+
+  if (!filtered.length) {
+    box.innerHTML = `<p class="muted">No registered contacts found.</p>`;
+    return;
+  }
+
+  box.innerHTML = filtered.map(c => {
+    const safeName = escapeHtml(c.name || c.email || "User");
+    const safeEmail = escapeHtml(c.email || "");
+    const safeDept = escapeHtml(c.department || "General");
+    const safePhone = escapeHtml(c.phone || "No phone");
+    const phoneArg = JSON.stringify(c.phone || "");
+    const nameArg = JSON.stringify(c.name || "");
+    return `
+      <div class="contact-row">
+        <div class="contact-main">
+          <strong>${safeName}</strong>
+          <span>${safeEmail}</span>
+          <small>${safeDept} • ${safePhone}</small>
+        </div>
+        <button class="whatsapp-btn" onclick='openWhatsAppInvite(${phoneArg}, ${nameArg})'>WhatsApp</button>
+      </div>
+    `;
+  }).join("");
+}
+
 function openSharedMeeting() {
   const room = pendingSharedRoom || $("joinRoomInput").value.trim();
   if (!room) return alert("No shared meeting found.");
@@ -425,7 +513,8 @@ async function createUser() {
     email: $("newUserEmail").value.trim(),
     password: $("newUserPassword").value,
     role: $("newUserRole").value,
-    department: $("newUserDepartment").value
+    department: $("newUserDepartment").value,
+    phone: $("newUserPhone").value.trim()
   };
 
   if (!payload.name || !payload.email || !payload.password) {
@@ -442,10 +531,12 @@ async function createUser() {
     $("newUserName").value = "";
     $("newUserEmail").value = "";
     $("newUserPassword").value = "";
+    $("newUserPhone").value = "";
     $("newUserRole").value = "user";
     $("newUserDepartment").value = "General";
 
     await loadUsers();
+    await loadCompanyContacts();
     alert("User created successfully.");
   } catch (e) {
     $("userCreateError").innerText = e.message;
@@ -457,6 +548,7 @@ async function deleteUser(userId) {
   try {
     await api(`/api/admin/users/${userId}`, {method: "DELETE"});
     await loadUsers();
+    await loadCompanyContacts();
   } catch (e) {
     alert(e.message);
   }
@@ -476,7 +568,7 @@ function renderUsers() {
       <strong>${escapeHtml(u.name)}</strong>
       <span>${escapeHtml(u.email)}</span>
       <small>${escapeHtml(u.role)}</small>
-      <small>${escapeHtml(u.department)}</small>
+      <small>${escapeHtml(u.department)}${u.phone ? " • " + escapeHtml(u.phone) : ""}</small>
       ${currentUser && currentUser.id === u.id
         ? `<button class="secondary" disabled>Current</button>`
         : `<button class="danger" onclick="deleteUser(${u.id})">Delete</button>`}
@@ -553,6 +645,7 @@ function renderAll() {
   if (!$("appPage") || $("appPage").classList.contains("hidden")) return;
   renderHomeStats();
   renderMeetings();
+  renderContactsDirectory();
   renderAdmin();
 }
 
@@ -596,13 +689,16 @@ function bindEvents() {
   $("copyShareLinkBtn").addEventListener("click", () => copyShareLink());
   $("openSharedMeetingBtn").addEventListener("click", openSharedMeeting);
   $("createUserBtn").addEventListener("click", createUser);
+  if ($("contactsSearch")) $("contactsSearch").addEventListener("input", renderContactsDirectory);
 }
+
 
 window.openMeetingRoom = openMeetingRoom;
 window.deleteMeeting = deleteMeeting;
 window.deleteUser = deleteUser;
 window.copyShareLink = copyShareLink;
 window.copyText = copyText;
+window.openWhatsAppInvite = openWhatsAppInvite;
 
 initDates();
 bindEvents();

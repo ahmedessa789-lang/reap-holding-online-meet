@@ -39,9 +39,16 @@ def init_db():
             password_hash TEXT NOT NULL,
             role TEXT NOT NULL DEFAULT 'user',
             department TEXT NOT NULL DEFAULT 'General',
+            phone TEXT NOT NULL DEFAULT '',
             created_at TEXT NOT NULL
         )
     """)
+
+
+    cur.execute("PRAGMA table_info(users)")
+    user_columns = [row[1] for row in cur.fetchall()]
+    if "phone" not in user_columns:
+        cur.execute("ALTER TABLE users ADD COLUMN phone TEXT NOT NULL DEFAULT ''")
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS meetings (
@@ -68,14 +75,14 @@ def init_db():
     if cur.fetchone()["count"] == 0:
         now = datetime.now().isoformat(timespec="seconds")
         demo_users = [
-            ("Ahmed Eissa", "admin@reapholding.com", "admin123", "admin", "Management"),
-            ("Reap User", "user@reapholding.com", "user123", "user", "General"),
+            ("Ahmed Eissa", "admin@reapholding.com", "admin123", "admin", "Management", ""),
+            ("Reap User", "user@reapholding.com", "user123", "user", "General", ""),
         ]
-        for name, email, password, role, department in demo_users:
+        for name, email, password, role, department, phone in demo_users:
             cur.execute("""
-                INSERT INTO users (name, email, password_hash, role, department, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (name, email, hash_password(password), role, department, now))
+                INSERT INTO users (name, email, password_hash, role, department, phone, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (name, email, hash_password(password), role, department, phone, now))
 
     conn.commit()
     conn.close()
@@ -145,13 +152,30 @@ class AppHandler(BaseHTTPRequestHandler):
             conn = db()
             cur = conn.cursor()
             cur.execute("""
-                SELECT id, name, email, role, department, created_at
+                SELECT id, name, email, role, department, phone, created_at
                 FROM users
                 ORDER BY id DESC
             """)
             rows = [row_to_dict(r) for r in cur.fetchall()]
             conn.close()
             return self.json_response({"users": rows})
+
+
+        if path == "/api/users/contacts":
+            user = self.current_user()
+            if not user:
+                return self.unauthorized()
+
+            conn = db()
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT id, name, email, role, department, phone, created_at
+                FROM users
+                ORDER BY name COLLATE NOCASE ASC, email ASC
+            """)
+            rows = [row_to_dict(r) for r in cur.fetchall()]
+            conn.close()
+            return self.json_response({"contacts": rows})
 
         if path == "/api/admin/stats":
             user = self.current_user()
@@ -319,7 +343,7 @@ class AppHandler(BaseHTTPRequestHandler):
             token = secrets.token_urlsafe(32)
             TOKENS[token] = user["id"]
 
-            safe_user = {k: user[k] for k in ["id", "name", "email", "role", "department"]}
+            safe_user = {k: user[k] for k in ["id", "name", "email", "role", "department", "phone"]}
             return self.json_response({"token": token, "user": safe_user})
 
         if path == "/api/register":
@@ -328,6 +352,7 @@ class AppHandler(BaseHTTPRequestHandler):
             email = (data.get("email") or "").strip().lower()
             password = data.get("password") or ""
             department = (data.get("department") or "General").strip()
+            phone = (data.get("phone") or "").strip()
 
             if not name:
                 return self.bad_request("User name is required")
@@ -340,20 +365,21 @@ class AppHandler(BaseHTTPRequestHandler):
             cur = conn.cursor()
             try:
                 cur.execute("""
-                    INSERT INTO users (name, email, password_hash, role, department, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO users (name, email, password_hash, role, department, phone, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                 """, (
                     name,
                     email,
                     hash_password(password),
                     "user",
                     department,
+                    phone,
                     datetime.now().isoformat(timespec="seconds"),
                 ))
                 conn.commit()
                 user_id = cur.lastrowid
                 cur.execute("""
-                    SELECT id, name, email, role, department, created_at
+                    SELECT id, name, email, role, department, phone, created_at
                     FROM users WHERE id = ?
                 """, (user_id,))
                 new_user = row_to_dict(cur.fetchone())
@@ -382,6 +408,7 @@ class AppHandler(BaseHTTPRequestHandler):
             password = data.get("password") or ""
             role = (data.get("role") or "user").strip().lower()
             department = (data.get("department") or "General").strip()
+            phone = (data.get("phone") or "").strip()
 
             if not name:
                 return self.bad_request("User name is required")
@@ -396,20 +423,21 @@ class AppHandler(BaseHTTPRequestHandler):
             cur = conn.cursor()
             try:
                 cur.execute("""
-                    INSERT INTO users (name, email, password_hash, role, department, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO users (name, email, password_hash, role, department, phone, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                 """, (
                     name,
                     email,
                     hash_password(password),
                     role,
                     department,
+                    phone,
                     datetime.now().isoformat(timespec="seconds"),
                 ))
                 conn.commit()
                 user_id = cur.lastrowid
                 cur.execute("""
-                    SELECT id, name, email, role, department, created_at
+                    SELECT id, name, email, role, department, phone, created_at
                     FROM users WHERE id = ?
                 """, (user_id,))
                 new_user = row_to_dict(cur.fetchone())
@@ -652,7 +680,7 @@ class AppHandler(BaseHTTPRequestHandler):
         user_id = TOKENS[token]
         conn = db()
         cur = conn.cursor()
-        cur.execute("SELECT id, name, email, role, department FROM users WHERE id = ?", (user_id,))
+        cur.execute("SELECT id, name, email, role, department, phone FROM users WHERE id = ?", (user_id,))
         row = cur.fetchone()
         conn.close()
         return row_to_dict(row)

@@ -52,6 +52,9 @@
         <label>Password</label>
         <input id="registerPassword" type="password" placeholder="At least 6 characters" />
 
+        <label>WhatsApp Number</label>
+        <input id="registerPhone" placeholder="Example: 01012345678" />
+
         <label>Department</label>
         <select id="registerDepartment">
           <option>General</option>
@@ -89,8 +92,8 @@
       </nav>
 
       <div class="sidebar-note">
-        <strong>Real V4.4</strong>
-        <span>Eissa Digital Theme • Robust Share Links</span>
+        <strong>Real V4.5</strong>
+        <span>Eissa Digital Theme • Contacts • WhatsApp Invites</span>
       </div>
     </aside>
 
@@ -225,6 +228,13 @@
               <button class="primary full" id="copyShareLinkBtn">Copy Share Link</button>
             </div>
 
+            <div class="card contacts-card">
+              <h3>Company Contacts</h3>
+              <p class="muted">All registered users can see this directory and send the current meeting link by WhatsApp.</p>
+              <input id="contactsSearch" placeholder="Search name, email, department, phone" />
+              <div id="companyContactsList" class="contacts-list"></div>
+            </div>
+
             <div class="card">
               <h3>Notes</h3>
               <textarea id="meetingNotes" placeholder="Write meeting notes or decisions..."></textarea>
@@ -263,6 +273,7 @@
             <input id="newUserName" placeholder="Full name" />
             <input id="newUserEmail" placeholder="Email address" />
             <input id="newUserPassword" placeholder="Password" type="password" />
+            <input id="newUserPhone" placeholder="WhatsApp number" />
             <select id="newUserRole"><option value="user">User</option><option value="admin">Admin</option></select>
             <select id="newUserDepartment">
               <option>Management</option><option>Sales</option><option>Finance</option>
@@ -283,50 +294,5 @@
 
   <script src="https://meet.jit.si/external_api.js"></script>
   <script src="/app.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const params = new URLSearchParams(window.location.search);
-  const roomFromLink = params.get("room");
-
-  if (roomFromLink) {
-    console.log("Meeting room from link:", roomFromLink);
-
-    localStorage.setItem("currentMeetingRoom", roomFromLink);
-
-    const roomInput = document.getElementById("roomName");
-    if (roomInput) {
-      roomInput.value = roomFromLink;
-    }
-
-    if (typeof joinMeeting === "function") {
-      joinMeeting(roomFromLink);
-      return;
-    }
-
-    if (typeof startMeeting === "function") {
-      startMeeting(roomFromLink);
-      return;
-    }
-
-    const joinBtn =
-      document.getElementById("joinMeetingBtn") ||
-      document.getElementById("startMeetingBtn");
-
-    if (joinBtn) {
-      joinBtn.click();
-      return;
-    }
-
-    const meetingArea =
-      document.getElementById("meetingArea") ||
-      document.getElementById("meetingContainer") ||
-      document.getElementById("videoContainer");
-
-    if (meetingArea) {
-      meetingArea.style.display = "block";
-    }
-  }
-});
-</script>
 </body>
 </html>

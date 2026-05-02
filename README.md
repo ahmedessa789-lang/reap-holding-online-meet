@@ -1,76 +1,40 @@
-# Reap Holding Online Meet - Real V4.4 Robust Share Links
+# Reap Holding Online Meet - V4.5 Contacts + WhatsApp Invites
 
-Backend + Database + Login + Public Registration + Admin User Management + Share Meeting Links + Eissa Digital Theme + Branded Jitsi meeting portal.
+This package includes the requested changes:
 
-## Features
+- All logged-in users can see the Company Contacts Directory.
+- Contacts are loaded from registered users in the shared SQLite database.
+- Passwords are never returned in the contacts API.
+- Registration now includes WhatsApp number.
+- Admin Create User now includes WhatsApp number.
+- Live Meeting Room includes WhatsApp invite buttons for every registered user.
+- WhatsApp invite sends the full meeting link, not only Meeting ID.
+- Existing databases are migrated automatically by adding a phone column if missing.
+- Jitsi toolbar includes Screen Share button.
+- Service worker cache name updated to avoid old cached app.js/style.css.
 
-- Login system
-- Demo admin and user accounts
-- SQLite database
-- Schedule meetings
-- Start instant meetings
-- Join by Meeting ID
-- Jitsi meeting room embedded inside the portal
-- Meeting notes
-- Meeting status: Scheduled / Live / Completed / Cancelled
-- Admin dashboard
-- Create users from Admin Dashboard
-- List users
-- Delete users
-- Copy full shareable meeting links
-- Open shared meeting links after login
-- Public self-registration for normal users
-- Registered users cannot access Admin Dashboard
-- Shared meeting links auto-open after login
-- Fixed shared meetings for users who did not create the meeting
-- Shared data across devices on the same deployed server
-- No pip install required
+## Upload steps
 
-## Demo Accounts
+Replace your project files with this package structure:
 
-Admin:
-admin@reapholding.com
-admin123
+- server.py
+- meetings.db
+- static/index.html
+- static/app.js
+- static/style.css
+- static/manifest.json
+- static/service-worker.js
 
-User:
-user@reapholding.com
-user123
+Then run:
 
-## Run Locally
+```bash
+git add .
+git commit -m "Add contacts directory and WhatsApp invites"
+git push
+```
 
-Open CMD inside the project folder and run:
+Wait for Railway Deployments to show Success.
 
-python server.py
+## Important
 
-Then open:
-
-http://127.0.0.1:8005
-
-## Railway Start Command
-
-python server.py
-
-Railway will provide PORT automatically.
-
-## Branding
-
-This version applies Eissa Digital Theme:
-
-- Dark Navy premium interface
-- Cyan / Teal highlights
-- Digital Solution by Ahmed Eissa attribution
-- Branded footer
-- Updated icon style
-
-
-## Additional Login Improvements
-
-- Removed Demo Accounts box from login page
-- Added Remember Me checkbox
-- Saves username and password locally when the user chooses to remember them
-
-
-## Robust Share Links
-
-- Shared meeting links now open even if the meeting record was lost after redeploy.
-- If the room id is not found in SQLite, the app creates a meeting record automatically and opens the Jitsi room.
+If an old browser still shows the old version, open the app in Incognito or clear site data once because the app uses a service worker cache.
