@@ -283,5 +283,50 @@
 
   <script src="https://meet.jit.si/external_api.js"></script>
   <script src="/app.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const params = new URLSearchParams(window.location.search);
+  const roomFromLink = params.get("room");
+
+  if (roomFromLink) {
+    console.log("Meeting room from link:", roomFromLink);
+
+    localStorage.setItem("currentMeetingRoom", roomFromLink);
+
+    const roomInput = document.getElementById("roomName");
+    if (roomInput) {
+      roomInput.value = roomFromLink;
+    }
+
+    if (typeof joinMeeting === "function") {
+      joinMeeting(roomFromLink);
+      return;
+    }
+
+    if (typeof startMeeting === "function") {
+      startMeeting(roomFromLink);
+      return;
+    }
+
+    const joinBtn =
+      document.getElementById("joinMeetingBtn") ||
+      document.getElementById("startMeetingBtn");
+
+    if (joinBtn) {
+      joinBtn.click();
+      return;
+    }
+
+    const meetingArea =
+      document.getElementById("meetingArea") ||
+      document.getElementById("meetingContainer") ||
+      document.getElementById("videoContainer");
+
+    if (meetingArea) {
+      meetingArea.style.display = "block";
+    }
+  }
+});
+</script>
 </body>
 </html>
